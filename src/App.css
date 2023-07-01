@@ -5,3 +5,29 @@
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafb);
 }
+
+form {
+  width: 400px;
+}
+
+form input {
+  width: 100%;
+  max-width: 100%;
+}
+
+form > * {
+  margin: 20px;
+}
+
+h1 {
+  margin-bottom: 40px;
+  font-size: x-large;
+}
+
+form > div > * {
+  margin: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}

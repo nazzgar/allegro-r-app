@@ -1,51 +1,141 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+import { z } from "zod";
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
-  }
+import { open, message } from "@tauri-apps/api/dialog";
+// Tauri state: https://gist.github.com/captainhusaynpenguin/5bdb6fcb141628b6865619bcd1c827fd
+function App() {
+  const [filePath, setFilePath] = useState<string>("");
+  const [transferId, setTransferId] = useState<string>("");
+
+  const handleOpenFile = async () => {
+    let selected = await open({
+      multiple: false,
+      filters: [
+        {
+          name: "plik",
+          extensions: ["csv"],
+        },
+      ],
+    });
+
+    if (Array.isArray(selected)) {
+      selected = selected[0];
+    }
+
+    if (selected == null) {
+      selected = "";
+    }
+
+    setFilePath(selected);
+  };
+
+  const handleSubmit = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    console.log(transferId, filePath);
+    const uuidSchema = z.string().uuid("Nieprawidłowy identyfikator płatności");
+    const filePathSchema = z.string().nonempty("Nieprawidłowa ścieżka pliku");
+
+    try {
+      uuidSchema.parse(transferId);
+      filePathSchema.parse(filePath);
+
+      await invoke("generate_file", {
+        filePathSrc: filePath,
+        transferId,
+      });
+
+      let savePath = await open({
+        multiple: false,
+        directory: true,
+        title: "Wybierz folder do zapisania pliku",
+      });
+
+      if (Array.isArray(savePath)) {
+        savePath = savePath[0];
+      }
+
+      if (savePath == null) {
+        return;
+      }
+
+      const savedFilePath = await invoke("save_results_to_file", {
+        savePath,
+        transferId,
+      });
+
+      await message(`Plik zapisany: \n ${savedFilePath}`);
+
+      setFilePath("");
+      setTransferId("");
+    } catch (e) {
+      if (typeof e == "string") {
+        await message(e, {
+          type: "error",
+        });
+      }
+
+      if (e instanceof z.ZodError) {
+        await message(e.issues[0].message, {
+          type: "error",
+        });
+      }
+    }
+
+    /* await save({
+      filters: [
+        {
+          name: "csv",
+          extensions: ["csv"],
+        },
+      ],
+    }); */
+  };
 
   return (
     <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
+      <h1>Generowanie plików do rozliczen Allegro</h1>
       <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="transferid">Identyfikator przelewu</label>
+            <input
+              id="transferid"
+              type="text"
+              value={transferId}
+              onChange={(e) => setTransferId(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <button type="button" onClick={handleOpenFile}>
+              Otwórz plik
+            </button>
+          </div>
+
+          {filePath && (
+            <div>
+              <label htmlFor="filepath">Wybrany plik</label>
+              <input id="filepath" disabled type="text" value={filePath} />
+            </div>
+          )}
+
+          {/* {filePath && (
+              <div>
+                <span>
+                  Wybrany plik:{" "}
+                  {filePath.split("\\")[filePath.split("\\").length - 1]}
+                </span>
+              </div>
+            )} */}
+
+          <div>
+            <button type="submit">Wygeneruj plik</button>
+          </div>
+        </form>
       </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg}</p>
     </div>
   );
 }
