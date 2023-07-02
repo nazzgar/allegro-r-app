@@ -1,29 +1,25 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
+import "../App.css";
 import { WebviewWindow } from "@tauri-apps/api/window";
 
 import { z } from "zod";
 
 import { open, message } from "@tauri-apps/api/dialog";
+import HelpIcon from "../components/HelpIcon";
+
 // Tauri state: https://gist.github.com/captainhusaynpenguin/5bdb6fcb141628b6865619bcd1c827fd
 
-function App() {
+function Home() {
   const [filePath, setFilePath] = useState<string>("");
   const [transferId, setTransferId] = useState<string>("");
 
-  useEffect(() => {
+  const openHelpWindow = () => {
     const webview = new WebviewWindow("theUniqueLabel", {
-      url: "https://google.com",
+      url: "/help",
+      title: "Pomoc",
     });
-
-    webview.once("tauri://created", function () {
-      // webview window successfully created
-    });
-    webview.once("tauri://error", function (e) {
-      console.log(e);
-    });
-  }, []);
+  };
 
   const handleOpenFile = async () => {
     let selected = await open({
@@ -102,19 +98,12 @@ function App() {
         });
       }
     }
-
-    /* await save({
-      filters: [
-        {
-          name: "csv",
-          extensions: ["csv"],
-        },
-      ],
-    }); */
   };
 
   return (
     <div className="container">
+      <HelpIcon onClick={openHelpWindow} />
+
       <h1>Generowanie plików do rozliczeń Allegro</h1>
       <div className="row">
         <form onSubmit={handleSubmit}>
@@ -141,15 +130,6 @@ function App() {
             </div>
           )}
 
-          {/* {filePath && (
-              <div>
-                <span>
-                  Wybrany plik:{" "}
-                  {filePath.split("\\")[filePath.split("\\").length - 1]}
-                </span>
-              </div>
-            )} */}
-
           <div>
             <button type="submit">Wygeneruj plik</button>
           </div>
@@ -159,4 +139,4 @@ function App() {
   );
 }
 
-export default App;
+export default Home;

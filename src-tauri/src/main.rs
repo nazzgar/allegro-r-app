@@ -64,17 +64,7 @@ fn parse_files(
         .from_path(file_path_src)
         .map_err(|err| err.to_string())?;
 
-    /* *state.header.lock().unwrap() = Some(rdr.headers().unwrap().clone()); */
-
-    /* println!("{:?}", state.header.lock().unwrap()); */
-
     let header = state.header.clone();
-
-    let df = rdr.headers().unwrap().clone();
-
-    println!("{:?}", header);
-
-    println!("{:?}", df);
 
     if header != rdr.headers().unwrap().clone() {
         return Err("Nieprawidowy format nagłówka".to_string());
@@ -124,8 +114,6 @@ fn parse_files(
 
     let mut ss = state.lines.lock().unwrap();
 
-    /* let mut cos = state.0.lock().unwrap().lines; */
-
     *ss = results;
 
     Ok(())
@@ -140,18 +128,11 @@ fn save_results_to_file(
     let results = state.lines.lock().unwrap().clone();
 
     let save_file_path_full = save_path + "\\" + &transfer_id + ".csv";
-    //TODO: zapisanie naglowka do pliku
+
     let mut writer = csv::WriterBuilder::new()
         .quote_style(csv::QuoteStyle::Always)
         .from_path(&save_file_path_full)
         .map_err(|err| err.to_string())?;
-
-    /* let header = match state.header.lock().unwrap().clone() {
-        Some(x) => x,
-        None => return Err("Brak nagłowka. Spróbuj ponownie uruchomić aplikacje".to_string()),
-    };
-
-    writer.write_record(header.into_iter()).unwrap(); */
 
     writer
         .write_record(state.header.clone().into_iter())

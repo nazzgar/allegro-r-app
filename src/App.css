@@ -31,3 +31,7 @@ form > div > * {
 * {
   box-sizing: border-box;
 }
+
+svg {
+  fill: currentColor;
+}
