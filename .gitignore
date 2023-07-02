@@ -23,6 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 
-
-#icons
-src-tauri/icons
