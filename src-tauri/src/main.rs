@@ -21,19 +21,32 @@ impl Operator {
 }
 
 //TODO: rozpisz struct stanu, ma miec dwie wartosci, header i
-struct ResultLines(Mutex<Vec<StringRecord>>);
-struct Header(Mutex<StringRecord>);
+/* struct ResultState(Mutex<InnerResultState>);
+struct InnerResultState {
+    header: Option<StringRecord>,
+    lines: Vec<StringRecord>,
+}
+ */
+
+struct ResultState {
+    header: Mutex<Option<StringRecord>>,
+    lines: Mutex<Vec<StringRecord>>,
+}
 
 fn example(
     file_path_src: &str,
     transfer_id: &str,
-    state: State<ResultLines>,
+    state: State<ResultState>,
 ) -> Result<(), String> {
     // Build the CSV reader and iterate over each record.
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
         .from_path(file_path_src)
         .map_err(|err| err.to_string())?;
+
+    *state.header.lock().unwrap() = Some(rdr.headers().unwrap().clone());
+
+    println!("{:?}", state.header.lock().unwrap());
 
     let mut results = vec![];
 
@@ -71,9 +84,17 @@ fn example(
         }
     }
 
-    let mut cos = state.0.lock().unwrap();
+    if results.is_empty() {
+        return Err(
+            "W pliku nie ma linijek powiązanych z wpisanym identyfikatorem płatności".to_string(),
+        );
+    }
 
-    *cos = results;
+    let mut ss = state.lines.lock().unwrap();
+
+    /* let mut cos = state.0.lock().unwrap().lines; */
+
+    *ss = results;
 
     Ok(())
 }
@@ -82,9 +103,9 @@ fn example(
 fn save_results_to_file(
     save_path: String,
     transfer_id: String,
-    state: State<ResultLines>,
+    state: State<ResultState>,
 ) -> Result<String, String> {
-    let results = state.0.lock().unwrap().clone();
+    let results = state.lines.lock().unwrap().clone();
 
     let save_file_path_full = save_path + "\\" + &transfer_id + ".csv";
     //TODO: zapisanie naglowka do pliku
@@ -92,6 +113,13 @@ fn save_results_to_file(
         .quote_style(csv::QuoteStyle::Always)
         .from_path(&save_file_path_full)
         .map_err(|err| err.to_string())?;
+
+    let header = match state.header.lock().unwrap().clone() {
+        Some(x) => x,
+        None => return Err("Brak nagłowka. Spróbuj ponownie uruchomić aplikacje".to_string()),
+    };
+
+    writer.write_record(header.into_iter()).unwrap();
 
     for line in results {
         writer.write_record(line.into_iter()).unwrap();
@@ -108,14 +136,17 @@ fn save_results_to_file(
 fn generate_file(
     file_path_src: String,
     transfer_id: String,
-    state: State<ResultLines>,
+    state: State<ResultState>,
 ) -> Result<(), String> {
     example(&file_path_src, &transfer_id, state)
 }
 
 fn main() {
     tauri::Builder::default()
-        .manage(ResultLines(Mutex::from(Vec::new())))
+        .manage(ResultState {
+            header: Default::default(),
+            lines: Default::default(),
+        })
         .invoke_handler(tauri::generate_handler![
             generate_file,
             save_results_to_file
