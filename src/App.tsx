@@ -34,8 +34,12 @@ function App() {
 
   const handleSubmit = async (event: React.SyntheticEvent) => {
     event.preventDefault();
-    console.log(transferId, filePath);
-    const uuidSchema = z.string().uuid("Nieprawidłowy identyfikator płatności");
+
+    const uuidSchema = z
+      .string()
+      .nonempty("Brak identyfikatora płatności")
+      .uuid("Nieprawidłowy identyfikator płatności");
+
     const filePathSchema = z.string().nonempty("Nieprawidłowa ścieżka pliku");
 
     try {
@@ -96,7 +100,7 @@ function App() {
 
   return (
     <div className="container">
-      <h1>Generowanie plików do rozliczen Allegro</h1>
+      <h1>Generowanie plików do rozliczeń Allegro</h1>
       <div className="row">
         <form onSubmit={handleSubmit}>
           <div>

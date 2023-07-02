@@ -45,8 +45,8 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "allegro-r-app",
-        "width": 800,
+        "title": "Generowanie plików do rozliczeń Allegro",
+        "width": 600,
         "height": 600
       }
     ]
