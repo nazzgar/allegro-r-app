@@ -35,3 +35,11 @@ form > div > * {
 svg {
   fill: currentColor;
 }
+
+.help-container {
+  padding: 60px;
+}
+
+svg {
+  cursor: pointer;
+}

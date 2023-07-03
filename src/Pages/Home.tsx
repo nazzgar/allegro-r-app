@@ -102,8 +102,9 @@ function Home() {
 
   return (
     <div className="container">
-      <HelpIcon onClick={openHelpWindow} />
-
+      <div style={{ paddingRight: "20px" }}>
+        <HelpIcon onClick={openHelpWindow} />
+      </div>
       <h1>Generowanie plików do rozliczeń Allegro</h1>
       <div className="row">
         <form onSubmit={handleSubmit}>
