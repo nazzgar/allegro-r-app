@@ -4,7 +4,7 @@ Automat z którego korzystamy do rozliczenia sprzedaży z Allegro przyjmuje na w
 
 Program sprawdza poprawność formatu identyfikatora płatności (uuid) oraz poprawnośc formatu pliku csv.
 
-![allegro-r-app](https://github.com/nazzgar/allegro-r-app/assets/44140153/c18bf580-8b3d-4a33-8097-e32be8121b45)
+![allegro-r-app](https://github.com/nazzgar/allegro-r-app/assets/44140153/c4428c3e-bf11-469e-ba33-feb9320ee8f9)
 
 # Tech Stack
 
